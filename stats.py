@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import sqrt
 from pandas import DataFrame
+import random
 
 path = 'test/test-dataset.csv'
 path2 = 'stars-dataset.csv'
@@ -21,14 +22,19 @@ def get_data(path):
     data = DataFrame.from_csv(path)
     for n, row in data.iterrows():
         dist = row['dist']
-        vel = np.linalg.norm([row['vx'],
-                              row['vy'], row['vz']])
+        vel = radial_vel([row['vy'], row['vy'], row['vz']],
+                         [row['x'], row['y'], row['z']])
         # When the distance is 100000 it is unknown
         if dist != 0 and vel != 0 and dist != 100000:
-            distances.append(dist*10**(-6))
+            distances.append(dist)
             # From parsec/year to km/s
             velocities.append(vel*978462)
     return distances, velocities
+
+
+def radial_vel(cartesian_vel, coordinates):
+        return abs(np.dot(cartesian_vel,
+                      coordinates/np.linalg.norm(coordinates)))
 
 distances, velocities = get_data(path2)
 
@@ -48,16 +54,12 @@ print "Minimum " + str(min(velocities))
 print "Mean " + str(np.mean(velocities))
 print "Stdev " + str(np.std(velocities))
 
-
-
-
 correl = np.corrcoef(distances, velocities)[0,1]
 print 'Correlation ', correl
 
 fit = np.polyfit(distances, velocities, 1)
 fit_fn = np.poly1d(fit)
 plt.plot(distances, velocities, 'yo', distances, fit_fn(distances), '--k')
-plt.axis([0, 1000, 0, 0.0004])
 print fit
 #plt.plot(distances, velocities, 'ro')
 
